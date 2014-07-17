@@ -30,3 +30,7 @@ There is much room for improvement in this script. I wrote it to help an extreme
 Maybe this can integrated in the browser like an purely automatic password manager that you can take with you from one computer / phone to another without the export / import which can be complicated.
 
 You can say that this script is for people who store passwords on paper in secret places because they cannot possibly remember all of them.
+
+The downside to this approach is that you may have to change all your passwords at once. Alternatively adding the year or month to the pass-phrase allows for batches of passwords.
+
+
