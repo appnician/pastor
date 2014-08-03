@@ -1,17 +1,18 @@
 package main
 
 import (
+	"crypto/sha1"
 	"crypto/sha256"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
+	"code.google.com/p/go.crypto/pbkdf2"
 	"github.com/gcmurphy/getpass"
 )
 
-var passwordLength = 12 - 5
-var validChars = "abcdefghijklmnopqrstuvwxyz0123456789"
+var passwordLength = 16
+var validChars = "abcdefghijklmnopqrstuvwxyz0123456789.~!@#$%^&*()_+"
 
 func main() {
 	log.SetFlags(log.Lshortfile)
@@ -27,10 +28,12 @@ func main() {
 		doorID, _ := getpass.GetPassWithOptions("Enter door id: ", 0, getpass.DefaultMaxPass)
 		doorID = strings.TrimSpace(doorID)
 		if doorID == "" {
-			os.Exit(0)
+			break
 		}
 
-		keyData := sha256.Sum256([]byte(basePhrase + " - " + doorID))
+		key := pbkdf2.Key([]byte(doorID), []byte(basePhrase), 1000, 32, sha1.New)
+
+		keyData := sha256.Sum256([]byte(key))
 
 		var pass []byte
 
@@ -40,6 +43,7 @@ func main() {
 		}
 		fmt.Println(string(pass))
 	}
+	clearScreen()
 }
 
 func sum(a []byte) int {
@@ -48,4 +52,8 @@ func sum(a []byte) int {
 		total += int(e)
 	}
 	return total
+}
+
+func clearScreen() {
+	fmt.Print("\033[2J")
 }
