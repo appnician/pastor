@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha1"
 	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 
 	"code.google.com/p/go.crypto/pbkdf2"
@@ -25,13 +26,12 @@ func main() {
 			break
 		}
 
-		key := pbkdf2.Key([]byte(doorID), []byte(basePhrase), 1000, 32, sha1.New)
-
-		keyData := sha256.Sum256(key)
-
 		var pass []byte
 
-		for _, e := range keyData[:passwordLength] {
+		keyData := crypt(doorID, basePhrase, 1000)
+		rawHash := sha256.Sum256(keyData)
+
+		for _, e := range rawHash[:passwordLength] {
 			c := validChars[int(e)%len(validChars)]
 			pass = append(pass, c)
 		}
@@ -50,4 +50,17 @@ func sum(a []byte) int {
 
 func clearScreen() {
 	fmt.Print("\033[2J")
+}
+
+// A stripped down version of crypt using pbkdf2
+// Copies from:
+// https://github.com/dlitz/python-pbkdf2/blob/master/pbkdf2.py#L230
+// meant to be used in limited cases
+func crypt(word string, salt string, iterations int) []byte {
+	salt = fmt.Sprintf("$p5k2$%x$%s", iterations, salt)
+	length := 24
+	key := pbkdf2.Key([]byte(word), []byte(salt), iterations, length, sha1.New)
+	hash := base64.StdEncoding.EncodeToString(key)
+	out := fmt.Sprintf("%s$%s", salt, hash)
+	return []byte(out)
 }
