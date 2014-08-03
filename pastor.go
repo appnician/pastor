@@ -3,33 +3,49 @@ package main
 import (
 	"crypto/sha256"
 	"fmt"
+	"log"
+	"os"
 	"strings"
+
+	"github.com/gcmurphy/getpass"
 )
 
 var passwordLength = 12 - 5
-var basePhrase string
 var validChars = "abcdefghijklmnopqrstuvwxyz0123456789"
-var sanityCheck string
 
 func main() {
-	// reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter base phrase: ")
-	// basePhrase, _ := reader.ReadString('\n')
-	basePhrase := "crap\n"
+	log.SetFlags(log.Lshortfile)
+
+	basePhrase, _ := getpass.GetPassWithOptions("Enter base phrase: ", 0, getpass.DefaultMaxPass)
 	basePhrase = strings.TrimSpace(basePhrase)
-	fmt.Print(basePhrase)
 
-	data := sha256.Sum256([]byte(basePhrase))
+	digest := sha256.Sum256([]byte(basePhrase))
 
-	fmt.Printf("%s", data)
+	fmt.Println(sum(digest[:]))
 
-	// for true {
-	// 	fmt.Print("Enter door id: ")
-	// 	doorID, _ := reader.ReadString('\n')
-	// 	doorID = strings.TrimSpace(doorID)
-	// 	if doorID == "" {
-	// 		os.Exit(0)
-	// 	}
-	// 	fmt.Print(doorID)
-	// }
+	for true {
+		doorID, _ := getpass.GetPassWithOptions("Enter door id: ", 0, getpass.DefaultMaxPass)
+		doorID = strings.TrimSpace(doorID)
+		if doorID == "" {
+			os.Exit(0)
+		}
+
+		keyData := sha256.Sum256([]byte(basePhrase + " - " + doorID))
+
+		var pass []byte
+
+		for _, e := range keyData[:passwordLength] {
+			c := validChars[int(e)%len(validChars)]
+			pass = append(pass, c)
+		}
+		fmt.Println(string(pass))
+	}
+}
+
+func sum(a []byte) int {
+	total := 0
+	for _, e := range a {
+		total += int(e)
+	}
+	return total
 }
